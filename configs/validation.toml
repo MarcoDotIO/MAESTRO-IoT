@@ -1,0 +1,54 @@
+name = "validation"
+duration_s = 45
+seed = 42
+output_dir = "outputs"
+arms = ["zigbee", "matter_thread", "maestro"]
+
+[traffic]
+telemetry_interval_s = 5.0
+telemetry_jitter_s = 0.75
+command_interval_s = 12.0
+command_jitter_s = 0.25
+command_target = "actuator-1"
+warmup_s = 1.0
+
+[traffic.payload_profile]
+base_bytes = 68
+optional_fields = [10, 8, 6]
+urgent_extra_bytes = 14
+urgent_probability = 0.08
+
+[policy]
+w1 = 0.35
+w2 = 0.25
+w3 = 0.25
+w4 = 0.15
+delta = 0.10
+beta = 0.40
+gamma = 0.60
+fragmentation_budget_bytes = 80
+min_interval_s = 1.0
+max_interval_s = 60.0
+sliding_window_size = 10
+hold_down_s = 5.0
+
+[protocol]
+ack_timeout_s = 0.75
+max_retries = 3
+retry_backoff_s = 0.15
+thread_repair_delay_s = 3.0
+zigbee_repair_delay_s = 1.5
+parent_search_interval_s = 5.0
+service_time_per_fragment_s = 0.03
+queue_energy_factor = 0.08
+
+[generated_topology]
+node_count = 10
+telemetry_interval_s = 5.0
+disruption_mode = "router_power_off"
+
+[generated_topology.payload_profile]
+base_bytes = 68
+optional_fields = [10, 8, 6]
+urgent_extra_bytes = 14
+urgent_probability = 0.08
