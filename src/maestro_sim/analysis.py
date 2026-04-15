@@ -66,7 +66,9 @@ def _collect_summaries(root: Path) -> pd.DataFrame:
 
 
 def _plot_bar(frame: pd.DataFrame, path: Path, value_column: str, title: str) -> None:
-    data = frame.groupby("arm", as_index=False)[value_column].mean(numeric_only=True)
+    numeric = frame.copy()
+    numeric[value_column] = pd.to_numeric(numeric[value_column], errors="coerce")
+    data = numeric.groupby("arm", as_index=False)[value_column].mean()
     if data.empty:
         return
     fig, ax = plt.subplots(figsize=(7, 4))

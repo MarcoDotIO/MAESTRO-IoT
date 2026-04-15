@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import json
-import math
 import random
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from statistics import mean
 from typing import Iterable
 
 import networkx as nx
@@ -18,6 +16,7 @@ from .config import FailureSchedule, NodeSpec, SimulationConfig, SweepMatrixConf
 from .drivers import SimEndpointDriver
 from .models import ArmName, ExperimentResult, MessageTrace, NodeMetrics, PolicyDecision, RuntimeMessage
 from .policy import FAMEPolicy, fragmentation_count
+from .results import summarize_metrics
 from .topology import build_generated_config
 
 ARM_OFFSETS: dict[ArmName, int] = {"zigbee": 101, "matter_thread": 211, "maestro": 307}
@@ -707,46 +706,7 @@ class SimulationEngine:
 def summarize_result(
     arm: ArmName, traces: list[MessageTrace], nodes: Iterable[NodeState]
 ) -> dict[str, object]:
-    delivered = [trace for trace in traces if trace.delivered]
-    command_latencies = [trace.rtt_s for trace in delivered if trace.kind == "command" and trace.rtt_s is not None]
-    rtts = [trace.rtt_s for trace in delivered if trace.rtt_s is not None]
-    total_messages = len(traces)
-    total_delivered = len(delivered)
-    node_metrics = [node.metrics for node in nodes]
-    recovery_windows = [window for metric in node_metrics for window in metric.recovery_windows]
-    outages = [window for metric in node_metrics for window in metric.outages]
-    summary = {
-        "arm": arm,
-        "total_messages": total_messages,
-        "delivered_messages": total_delivered,
-        "delivery_ratio": round(total_delivered / total_messages, 6) if total_messages else 0.0,
-        "avg_rtt_s": round(mean(rtts), 6) if rtts else None,
-        "p50_rtt_s": _percentile(rtts, 50),
-        "p95_rtt_s": _percentile(rtts, 95),
-        "command_p50_s": _percentile(command_latencies, 50),
-        "command_p95_s": _percentile(command_latencies, 95),
-        "route_recovery_time_avg_s": round(mean(recovery_windows), 6) if recovery_windows else 0.0,
-        "application_outage_window_avg_s": round(mean(outages), 6) if outages else 0.0,
-        "fragment_count": sum(trace.fragments for trace in traces),
-        "retransmission_rate": round(
-            sum(trace.retries for trace in traces) / total_messages, 6
-        )
-        if total_messages
-        else 0.0,
-        "parent_switches": sum(metric.parent_switches for metric in node_metrics),
-        "queue_depth_peak": max((metric.queue_depth_peak for metric in node_metrics), default=0),
-        "relative_energy_cost": round(sum(metric.energy_cost for metric in node_metrics), 6),
-        "ack_timeouts": sum(metric.ack_timeouts for metric in node_metrics),
-    }
-    return summary
-
-
-def _percentile(values: list[float | None], percentile: int) -> float | None:
-    numeric = sorted(value for value in values if value is not None)
-    if not numeric:
-        return None
-    index = min(len(numeric) - 1, max(0, math.ceil((percentile / 100) * len(numeric)) - 1))
-    return round(float(numeric[index]), 6)
+    return summarize_metrics(arm, traces, (node.metrics for node in nodes))
 
 
 def run_experiment(config: SimulationConfig, output_root: str | Path | None = None) -> Path:

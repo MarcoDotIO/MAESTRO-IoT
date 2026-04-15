@@ -5,3 +5,6 @@ __pycache__/
 outputs/
 clean_runs/
 .DS_Store
+firmware/**/build/
+firmware/**/build*/
+build_s3/

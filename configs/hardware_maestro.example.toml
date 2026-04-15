@@ -1,0 +1,93 @@
+name = "hardware_validation"
+arm = "maestro"
+duration_s = 45
+output_dir = "outputs/hardware"
+controller_id = "controller"
+monitor_node_id = "sensecap-monitor"
+poll_interval_s = 0.05
+dashboard_refresh_s = 0.5
+grace_period_s = 1.0
+
+[traffic]
+telemetry_interval_s = 5.0
+telemetry_jitter_s = 0.75
+command_interval_s = 12.0
+command_jitter_s = 0.25
+command_target = "actuator-1"
+warmup_s = 1.0
+
+[traffic.payload_profile]
+base_bytes = 68
+optional_fields = [10, 8, 6]
+urgent_extra_bytes = 14
+urgent_probability = 0.08
+
+[policy]
+w1 = 0.35
+w2 = 0.25
+w3 = 0.25
+w4 = 0.15
+delta = 0.10
+beta = 0.40
+gamma = 0.60
+fragmentation_budget_bytes = 80
+min_interval_s = 1.0
+max_interval_s = 60.0
+sliding_window_size = 10
+hold_down_s = 5.0
+
+[protocol]
+ack_timeout_s = 0.75
+max_retries = 3
+retry_backoff_s = 0.15
+thread_repair_delay_s = 3.0
+zigbee_repair_delay_s = 1.5
+parent_search_interval_s = 5.0
+service_time_per_fragment_s = 0.03
+queue_energy_factor = 0.08
+
+[[failures]]
+at_s = 20.0
+kind = "border_router_loss"
+target = "thread-br"
+duration_s = 14.0
+
+[[devices]]
+node_id = "sensecap-monitor"
+role = "monitor"
+board = "sensecap_indicator_d1"
+capabilities = ["display"]
+
+[devices.port]
+path = "/dev/cu.REPLACE_WITH_DISCOVERED_MONITOR_PORT"
+baudrate = 115200
+
+[[devices]]
+node_id = "sensor-a"
+role = "sensor"
+board = "esp32_generic_wifi"
+capabilities = ["wifi", "telemetry"]
+
+[devices.port]
+path = "/dev/cu.REPLACE_WITH_SENSOR_A_PORT"
+baudrate = 115200
+
+[[devices]]
+node_id = "sensor-b"
+role = "sensor"
+board = "esp32_generic_wifi"
+capabilities = ["wifi", "telemetry"]
+
+[devices.port]
+path = "/dev/cu.REPLACE_WITH_SENSOR_B_PORT"
+baudrate = 115200
+
+[[devices]]
+node_id = "thread-br"
+role = "border_router"
+board = "esp_thread_matter_devkit"
+capabilities = ["thread", "matter", "wifi"]
+
+[devices.port]
+path = "/dev/cu.REPLACE_WITH_THREAD_BR_PORT"
+baudrate = 115200
